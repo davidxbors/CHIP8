@@ -6,9 +6,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
-#define _CHIP_8_
+
+/* TODO javid9x display lib for display */
 
 /* memory and registers */
 
@@ -60,6 +62,9 @@ unsigned char chip8_fontset[80] =
 /* current opcode processed */
 uint16_t opcode;
 
+/* TODO implement posibility to switch between COSMAC VIP and SUPER-CHIP */
+enum instruction_set {SUPER_CHIP, COSMAC_VIP} is;
+
 /* init the emulator */
 void __init_chip8_emulator (void)
 {
@@ -79,6 +84,8 @@ void __init_chip8_emulator (void)
 	int i = 0;
 	for(; i < 80; ++i)
 		memory[i] = chip8_fontset[i];
+	/* for RNG */
+	srand(time(0));	
 }
 
 /* load the rom file into the emulator */
@@ -116,7 +123,6 @@ int __load_chip8_emulator (const char *filepath)
 	}
 
 	/* finally, copy the rom buffer into the memory */
-	/* TODO review */
 	memcpy(memory+512, (uint8_t*)rom_buffer, size+1);
 
 	/* clean up */
@@ -134,29 +140,20 @@ error1:
 
  void __c8_draw (uint8_t vx, uint8_t vy, unsigned n) 
 {
-	printf("Drawing...\n");
-	int x = vx % 64;
-	int y = vy % 32;
+	int x = vx & 63;
+	int y = vy & 31;
 	V[0xF] = 0;
 	int aux = x;
-	for (int i = 0; i < n; ++i) {
-		// printf("%d, %d\n", y, x);
-		uint8_t n_byte = memory[I + i];
+	for (int i = 0; i < n; ++i, y++) {
 		x = aux;
-		for (int j = 7; j >= 0; --j) {
-			if ( CHECK_BIT(n_byte, j) && display[y][x] ) {
+		for (int j = 7; j >= 0; --j, x++) {
+			if ( CHECK_BIT(memory[I + i], j) && display[y][x] ) {
 				V[0xF] = 1;
-			//	printf("%d, %d\n", y, x);
 				display[y][x] = 0;
-			} else if ( CHECK_BIT(n_byte, j) && !display[y][x] ) {
-			//	printf("%d, %d\n", y, x);
+			} else if ( CHECK_BIT(memory[I + i], j) && !display[y][x] ) {
 				display[y][x] = 1;
-			}/* else {
-				printf("%d, %d, nothing found boss\n", y, x);
-			}*/
-			x++;
+			}
 		}
-		y++;
 	}
 }
 
@@ -278,8 +275,7 @@ void __c8_cycle (void)
 		PC = nnn + V[0x0];
 		break;
 	case 0xC:	/* RND Vx, byte */
-		/* TODO gen random */
-		V[x] = 0x2 & kk;
+		V[x] = rand() & kk;
 	case 0xD:	/* DRW Vx, Vy, nibble */
 		__c8_draw(V[x], V[y], n);
 		__c8_dump_display();
@@ -356,13 +352,19 @@ void chip8_emulator (char *rom_fp)
 
 void __usage ()
 {
-	printf("Chip8 emulator usage: ./chip8_emulator <ROM_FILEPATH>\n");
+	printf("Chip8 emulator usage: ./chip8_emulator <ROM_FILEPATH> opt<NORMAL/DEBUG> opt<ISA>\nFor more details visit https://github.com/davidxbors/CHIP8\n");
 }
 
 int main (int argc, char *argv[])
 {
+	is = 0;
 	if (argc == 2 && strcmp(argv[1], "help"))
 		chip8_emulator(argv[1]);
+	if (argc == 4 && !strcmp(argv[2], "NORMAL"))
+		if (!strcmp(argv[3], "COSMAC")) {
+			is = 1;
+			chip8_emulator(argv[1]);
+		} else __usage();
 	else    __usage();
 	return 0;
 }
