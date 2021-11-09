@@ -400,7 +400,7 @@ void __c8_dump_memory ()
 
 	fprintf(stderr, "======================================\n");
 	fprintf(stderr, "Mem:\n");
-	for (int i = 0 i < 4096; i++)
+	for (int i = 0; i < 4096; i++)
 		fprintf(stderr, "0x%02x ", memory[i]);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "======================================\n");
