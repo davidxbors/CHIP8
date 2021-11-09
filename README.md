@@ -25,7 +25,7 @@ make
 # if you want to delete the executable
 make clean 
 ```
-```bash Debug Mode !TODO
+```bash Debug Mode
 # building and cleaning are done in the same way
 # to run the emulator with a ROM in debug mode you do:
 ./chip8_emulator <ROM_filepath> DEBUG
@@ -40,8 +40,16 @@ The debugger that this emulator comes with is by all means a very basic one. Her
 * n -> next instruction
 * s -> stops the running of the program
 * m addr buff -> shows what's in memory starting at address $addr and continuing %buff bytes. If $addr is negative it shows all memory
+* b addr -> addr in memory at which the program should stop running (if PC == addr break)
 
 ## References
 
-http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
+[Tehnical informations about CHIP-8 and it's opcodes](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM)
+[Tehnical informations about timing of instructions](https://jackson-s.me/2019/07/13/Chip-8-Instruction-Scheduling-and-Frequency.html)
+[test_opcodes.ch8](https://github.com/corax89/chip8-test-rom)
+[ibm_logo.ch8](https://github.com/ronazulay/Chip8/tree/master/Chip8/Roms)
+[All the other ROMs](https://johnearnest.github.io/chip8Archive)
+
+
+
 
