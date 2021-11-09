@@ -11,6 +11,8 @@
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 
 /* TODO javid9x display lib for display */
+/* TODO check 0x0 problem test_opcodes */
+/* TODO solve opcodes problem */
 
 /* memory and registers */
 
@@ -62,8 +64,8 @@ unsigned char chip8_fontset[80] =
 /* current opcode processed */
 uint16_t opcode;
 
-/* TODO implement posibility to switch between COSMAC VIP and SUPER-CHIP */
 enum instruction_set {SUPER_CHIP, COSMAC_VIP} is;
+enum run_mode {NORMAL, DEBUG} mode;
 
 /* init the emulator */
 void __init_chip8_emulator (void)
@@ -144,9 +146,9 @@ error1:
 	int y = vy & 31;
 	V[0xF] = 0;
 	int aux = x;
-	for (int i = 0; i < n; ++i, y++) {
+	for (int i = 0; i < n && y < 32; ++i, y++) {
 		x = aux;
-		for (int j = 7; j >= 0; --j, x++) {
+		for (int j = 7; j >= 0 && x < 64; --j, x++) {
 			if ( CHECK_BIT(memory[I + i], j) && display[y][x] ) {
 				V[0xF] = 1;
 				display[y][x] = 0;
@@ -160,11 +162,37 @@ error1:
 void __c8_dump_display (void)
 {
 	system("clear");
+
+	for(int i = 0; i < 66; i++)
+		printf("==");
+	printf("\n");
+
 	for(int i = 0; i < 32; i++) {
+		printf("||");
+
 		for(int j = 0; j < 64; j++)
 			printf(display[i][j] ? "X " : "  ");
+
+		printf("||");
 		printf("\n");
 	}
+
+	for(int i = 0; i < 66; i++)
+		printf("==");
+	printf("\n");
+}
+
+void __c8_dump_op (uint16_t opcode, unsigned nnn, unsigned n, unsigned x, unsigned y, unsigned kk)
+{
+	
+	fprintf(stderr, "======================================\n");
+	fprintf(stderr, "opcode = 0x%04x\n", opcode);
+	fprintf(stderr, "nnn = 0x%04x\n", nnn);
+	fprintf(stderr, "n = 0x%04x\n", n);
+	fprintf(stderr, "x = 0x%04x\n", x);
+	fprintf(stderr, "y = 0x%04x\n", y);
+	fprintf(stderr, "kk = 0x%04x\n", kk);
+	fprintf(stderr, "======================================\n");
 }
 
 void __c8_cycle (void)
@@ -189,16 +217,20 @@ void __c8_cycle (void)
 	unsigned y   = (opcode >> 4) & 0xF;
 	unsigned kk  = opcode & 0xFF;
 
-	//printf("0x%x\n", opcode & 0xF000);
+	//printf("0x0x%08x\n", opcode & 0xF000);
+
+	if (mode == 1) {
+		__c8_dump_op(opcode, nnn, n, x, y, kk);
+	}
 
 	switch ((opcode & 0xF000) >> 12 & 0xF) {
 	case 0x0:	
 		if (0x00E0 == opcode) { /* clear the display */
 			memset(display, 0, sizeof(display));
 		} else if (0x00EE == opcode) { /* return from subroutine */
-			PC = stack[SP--];
+			PC = stack[--SP];
 		} else {
-			fprintf(stderr, "Unknown instruction: 0x%x", opcode);
+			fprintf(stderr, "Unknown instruction: 0x0x%08x", opcode);
 			exit(1);
 		}
 		break;
@@ -260,7 +292,7 @@ void __c8_cycle (void)
 			V[0xF] = CHECK_BIT(V[x], 0);
 			V[x] <<= 1;
 		} else { 
-			fprintf(stderr, "Unknown instruction: 0x%x\n", opcode);
+			fprintf(stderr, "Unknown instruction: 0x0x%08x\n", opcode);
 			exit(1);
 		}
 		break;
@@ -292,7 +324,7 @@ void __c8_cycle (void)
 			if (V[x] < 17)
 				PC += (key[V[x]]) ? 0 : 2;
 		} else {
-			fprintf(stderr, "Unknown instruction: 0x%x\n", opcode);
+			fprintf(stderr, "Unknown instruction: 0x0x%08x\n", opcode);
 			exit(1);
 		}
 		break;
@@ -343,25 +375,105 @@ void __c8_cycle (void)
 				I = idx;
 			break;
 		} else {
-			fprintf(stderr, "Unknown instruction: 0x%x\n", opcode);
+			fprintf(stderr, "Unknown instruction: 0x0x%08x\n", opcode);
 			exit(1);
 		}
 		break;
 	default:
-		fprintf(stderr, "Unknown instruction: 0x%x\n", opcode);
+		fprintf(stderr, "Unknown instruction: 0x0x%08x\n", opcode);
 		exit(1);
 		break;
 	}	
+}
+
+void __c8_dump_registers ()
+{
+	fprintf(stderr, "======================================\n");
+	fprintf(stderr, "Registers:\n");
+	for (int i = 0; i < 16; i++) 
+		fprintf(stderr, "V%d = 0x%08x (%d)\n", i, V[i], V[i]);
+	fprintf(stderr, "======================================\n");
+}
+
+void __c8_dump_memory ()
+{
+
+	fprintf(stderr, "======================================\n");
+	fprintf(stderr, "Mem:\n");
+	for (int i = 0 i < 4096; i++)
+		fprintf(stderr, "0x%02x ", memory[i]);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "======================================\n");
+}
+
+void __c8_dump_special_registers ()
+{
+	
+	fprintf(stderr, "======================================\n");
+	fprintf(stderr, "Special Registers:\n");
+	fprintf(stderr, "PC = %d\n", PC);	
+	fprintf(stderr, "SP = %d\n", SP);	
+	fprintf(stderr, "I = %d\n", I);	
+	fprintf(stderr, "======================================\n");
+}
+
+void __c8_dump_stack ()
+{
+	
+	fprintf(stderr, "======================================\n");
+	fprintf(stderr, "Stack\n");
+	for (int i = 0; i < SP; i++)
+		fprintf(stderr, "Stack@%d = 0x%08x (%d)", i, stack[i], stack[i]);
+	fprintf(stderr, "======================================\n");
 }
 
 void chip8_emulator (char *rom_fp)
 {
 	__init_chip8_emulator();
 	__load_chip8_emulator(rom_fp);
+	if (!mode)
+		while (1) {
+			__c8_cycle();
+		}
+	else
+		while(1) {
+			__c8_dump_registers();			/* V0-VF 		*/
+			__c8_dump_special_registers();		/* I, SP, PC, DT, ST 	*/
+			__c8_dump_stack();			/* stack 	     	*/
+			__c8_dump_memory();
+			__c8_cycle();
+			char command, nl;
+get_command:
+			printf("C8DBG> ");
+			scanf("%c%c", &command, &nl);
+			if (command == 'm') {
+				int mem_addr;
+				int mem_size;
+				scanf("%d", &mem_addr);
+				if (mem_addr >= 0) {
+					scanf("%d%c", &mem_size, &nl);
+					if (mem_addr + mem_size < 4096)
+						for (int i = 0; i < mem_size; i++)
+							fprintf(stderr, "memory[%d] = 0x%08x (%d)\n", mem_addr, memory[mem_addr + i], memory[mem_addr + i]);
+					goto get_command;
+				}
+				else	__c8_dump_memory();
+			} else if (command == 's') {
+				exit(1);
+			} else if (command == 'b') {
+				int break_addr;
+				scanf("%d%c", &break_addr, &nl);
+				if (break_addr >= 0 && break_addr < 4096) {
+					while(PC != break_addr) {
+						__c8_cycle();
+					}
+				} else fprintf(stderr, "C8DBG> Breakpoint address: %d is out of bounds!\n", break_addr);
+			} else if (command != 'n') {
+				fprintf(stderr, "C8DBG> Debugger command: %c unknown!\n", command);
+				exit(1);
+			}
+		}
 
-	while (1) {
-		__c8_cycle();
-	}
 }
 
 void __usage ()
@@ -374,12 +486,21 @@ int main (int argc, char *argv[])
 	is = 0;
 	if (argc == 2 && strcmp(argv[1], "help"))
 		chip8_emulator(argv[1]);
-	if (argc == 4 && !strcmp(argv[2], "NORMAL"))
-		if (!strcmp(argv[3], "COSMAC")) {
+	if (argc == 4) {
+		if (!strcmp(argv[2], "NORMAL"))
+			mode = 0;
+		else if (!strcmp(argv[2], "DEBUG"))
+			mode = 1;
+		else 	__usage();
+		if (!strcmp(argv[3], "COSMAC"))
 			is = 1;
-			chip8_emulator(argv[1]);
-		} else __usage();
+		else if (!strcmp(argv[3], "SUPER"))
+			is = 0;	
+		else   { __usage(); goto exit; };
+		chip8_emulator(argv[1]);
+	}	
 	else    __usage();
+exit:
 	return 0;
 }
 

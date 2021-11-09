@@ -33,6 +33,14 @@ make clean
 ./chip8_emulator <ROM_filepath> DEBUG COSMAC
 ```
 
+## Debugger Usage
+
+The debugger that this emulator comes with is by all means a very basic one. Here are the commands that one can use with it:
+
+* n -> next instruction
+* s -> stops the running of the program
+* m addr buff -> shows what's in memory starting at address $addr and continuing %buff bytes. If $addr is negative it shows all memory
+
 ## References
 
 http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
