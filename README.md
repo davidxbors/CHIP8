@@ -6,9 +6,11 @@ Yes, yet another Chip8 Emulator on the internet.(yes, I know it's actually an in
 
 CHIP-8 was created by engineer Joe Weisbecker in 1977 for the COSMAC VIP microcomputer. It was intended as a simpler way to make small programs and games for the computer. Instead of using machine language, you could type in simple hexadecimal instructions that resembled machine code, but which was actually interpreted on the fly by a small program.
 
-Nowadays, if you want to write your custom ROM for a CHIP-8 interpreter you can simply do it by manually writing the hex opcodes and loading the ROM into the emulator, or you can use [Octo]() for a more user-friendly experience.
+Nowadays, if you want to write your custom ROM for a CHIP-8 interpreter you can simply do it by manually writing the hex opcodes and loading the ROM into the emulator, or you can use [Octo](http://johnearnest.github.io/Octo/) for a more user-friendly experience.
 
 This emulator is far from perfect, and it's intended to be a very light-weight, straight-forward, easy to use and easy to learn from (I tried to keep the source code as simple as possible). It's going to run directly in your terminal so that's a nice thing too I guess.(if you see the full half of the glass, like me)
+
+For any questions you might have feel free to [contact me](mailto:daviddvd267@gmail.com), or ask away on the [r/EmuDev](https://old.reddit.com/r/EmuDev/) forum.
 
 ## Usage
 
