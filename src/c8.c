@@ -247,15 +247,16 @@ void __c8_cycle (void)
 			V[x] -= V[y];
 			break;
 		} else if ((opcode & 0x000F) == 0x6) {	/* SHR Vx {, Vy{ */
-			//V[x] = V[y];
-			//V[0xF] = CHECK_BIT(V[x], 7);
-			//V[x] >>= 1;
+			if (1 == is)
+				V[x] = V[y];
 			V[0xF] = CHECK_BIT(V[x], 7);
 			V[x] >>= 1;
 		} else if ((opcode & 0x000F) == 0x7) { 	/* SUBN Vx, Vy */
 			V[0xF] = (V[x] < V[y]);
 			V[x] = V[y] - V[x];
 		} else if ((opcode & 0x000F) == 0xE) {	/* SHL Vx {, Vy} */
+			if (1 == is)
+				V[x] = V[y];
 			V[0xF] = CHECK_BIT(V[x], 0);
 			V[x] <<= 1;
 		} else { 
@@ -272,7 +273,10 @@ void __c8_cycle (void)
 		I = nnn;
 		break;
 	case 0xB:	/* JP V0, addr */
-		PC = nnn + V[0x0];
+		if (1 == is)
+			PC = nnn + V[0x0];
+		else
+			PC = nnn + V[x];
 		break;
 	case 0xC:	/* RND Vx, byte */
 		V[x] = rand() & kk;
@@ -306,7 +310,13 @@ void __c8_cycle (void)
 			sound_timer = V[x];
 			break;
 		} else if ((opcode & 0x00FF) == 0x1E) {  /* ADD I, Vx */
-			I += V[x];
+			if (is == 1) { 
+				I += V[x];
+			} else {			/* ADD I, Vx and set VF if overflow */
+				int aux = (I&0xFFF) + V[x];
+				V[0xF] = aux >> 12;
+				I = aux;
+			}
 			break;
 		} else if ((opcode & 0x00FF) == 0x29) {  /* LD F, Vx */
 			I = (V[x] & 0x0F) * 5;
@@ -321,12 +331,16 @@ void __c8_cycle (void)
 			int idx = I;
 			for(; i <= 0xF; i++)
 				memory[idx++] = V[i]; 	
+			if (1 == is)
+				I = idx;
 			break;
 		} else if ((opcode & 0x00FF) == 0x65) {  /* LD Vx, [I] */
 			int i = 0;
 			int idx = I;
 			for(; i <= 0xF; i++)
 				V[i] = memory[idx++];
+			if (1 == is)
+				I = idx;
 			break;
 		} else {
 			fprintf(stderr, "Unknown instruction: 0x%x\n", opcode);
