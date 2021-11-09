@@ -45,9 +45,13 @@ The debugger that this emulator comes with is by all means a very basic one. Her
 ## References
 
 [Tehnical informations about CHIP-8 and it's opcodes](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM)
+
 [Tehnical informations about timing of instructions](https://jackson-s.me/2019/07/13/Chip-8-Instruction-Scheduling-and-Frequency.html)
+
 [test_opcodes.ch8](https://github.com/corax89/chip8-test-rom)
+
 [ibm_logo.ch8](https://github.com/ronazulay/Chip8/tree/master/Chip8/Roms)
+
 [All the other ROMs](https://johnearnest.github.io/chip8Archive)
 
 
