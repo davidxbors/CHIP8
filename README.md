@@ -28,7 +28,7 @@ make clean
 ```bash Debug Mode
 # building and cleaning are done in the same way
 # to run the emulator with a ROM in debug mode you do:
-./chip8_emulator <ROM_filepath> DEBUG
+./chip8_emulator <ROM_filepath> DEBUG SUPER
 # for COSMAC VIP running
 ./chip8_emulator <ROM_filepath> DEBUG COSMAC
 ```
@@ -41,6 +41,11 @@ The debugger that this emulator comes with is by all means a very basic one. Her
 * s -> stops the running of the program
 * m addr buff -> shows what's in memory starting at address $addr and continuing %buff bytes. If $addr is negative it shows all memory
 * b addr -> addr in memory at which the program should stop running (if PC == addr break)
+* w addr -> sets a watchpoint for the memory at the given address. The debugger supports up to 100 watchpoints.
+
+## TODO
+* SOLVE WARNINGS
+* ORG CODE
 
 ## References
 

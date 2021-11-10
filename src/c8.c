@@ -10,9 +10,6 @@
 
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 
-/* TODO javid9x display lib for display */
-/* TODO check 0x0 problem test_opcodes */
-/* TODO solve opcodes problem */
 
 /* memory and registers */
 
@@ -61,10 +58,34 @@ unsigned char chip8_fontset[80] =
     0xF0, 0x80, 0xF0, 0x80, 0x80  //F
 };
 
+
+/* emulator variables */
+/* TODO - configurable */
+/* keypad mapping */
+enum key_map {
+	one = '1',
+	two = '2',
+	three = '3',
+	c = '4',
+	four = 'q',
+	five = 'w',
+	six = 'e',
+	d = 'r',
+	seven = 'a',
+	eight = 's',
+	nine = 'd',
+	e = 'f',
+	a = 'z',
+	zero = 'x',
+	b = 'c',
+	f = 'v'
+} keys;
+
 /* current opcode processed */
 uint16_t opcode;
-
+/* instruction set currently used (SUPER / COSMAC, by default SUPER) */
 enum instruction_set {SUPER_CHIP, COSMAC_VIP} is;
+/* running mode: NORMAL/DEBUG */
 enum run_mode {NORMAL, DEBUG} mode;
 
 /* init the emulator */
@@ -146,6 +167,8 @@ error1:
 	int y = vy & 31;
 	V[0xF] = 0;
 	int aux = x;
+	if (1 == mode)
+		printf("C8DBG @ __c8_draw > n = %d", n);
 	for (int i = 0; i < n && y < 32; ++i, y++) {
 		x = aux;
 		for (int j = 7; j >= 0 && x < 64; --j, x++) {
@@ -212,12 +235,11 @@ void __c8_cycle (void)
 
 	/* DECODE & EXECUTE*/
 	unsigned nnn = opcode & 0xFFF; 
-	unsigned n   = (opcode >> 12) & 0xF;
 	unsigned x   = (opcode >> 8) & 0xF;
 	unsigned y   = (opcode >> 4) & 0xF;
 	unsigned kk  = opcode & 0xFF;
-
-	//printf("0x0x%08x\n", opcode & 0xF000);
+	unsigned n   = (kk & 0x0F); 
+			//printf("0x0x%08x\n", opcode & 0xF000);
 
 	if (mode == 1) {
 		__c8_dump_op(opcode, nnn, n, x, y, kk);
@@ -229,7 +251,10 @@ void __c8_cycle (void)
 			memset(display, 0, sizeof(display));
 		} else if (0x00EE == opcode) { /* return from subroutine */
 			PC = stack[--SP];
-		} else {
+		} else if (0x0000 == opcode) { /* custom stop opcode */
+			printf("CHIP-8 shutdown\n");
+			exit(0);
+		}else {
 			fprintf(stderr, "Unknown instruction: 0x0x%08x", opcode);
 			exit(1);
 		}
@@ -281,7 +306,7 @@ void __c8_cycle (void)
 		} else if ((opcode & 0x000F) == 0x6) {	/* SHR Vx {, Vy{ */
 			if (1 == is)
 				V[x] = V[y];
-			V[0xF] = CHECK_BIT(V[x], 7);
+			V[0xF] = V[x] & 1;
 			V[x] >>= 1;
 		} else if ((opcode & 0x000F) == 0x7) { 	/* SUBN Vx, Vy */
 			V[0xF] = (V[x] < V[y]);
@@ -289,7 +314,7 @@ void __c8_cycle (void)
 		} else if ((opcode & 0x000F) == 0xE) {	/* SHL Vx {, Vy} */
 			if (1 == is)
 				V[x] = V[y];
-			V[0xF] = CHECK_BIT(V[x], 0);
+			V[0xF] = (V[x] >> 7) & 1;
 			V[x] <<= 1;
 		} else { 
 			fprintf(stderr, "Unknown instruction: 0x0x%08x\n", opcode);
@@ -333,7 +358,62 @@ void __c8_cycle (void)
 			V[x] = delay_timer;
 			break;
 		} else if ((opcode & 0x00FF) == 0x0A) {  /* LD Vx, K */
-			fprintf(stderr, "Not implemented yet!\n");
+			int nl;
+			scanf("%c%c", &keys, &nl);
+			switch (keys) {
+			case zero:
+				V[x] = 0x0;
+				break;
+			case one:
+				V[x] = 0x1;
+				break;
+			case two:
+				V[x] = 0x2;
+				break;
+			case three:
+				V[x] = 0x3;
+				break;
+			case four:
+				V[x] = 0x4;
+				break;
+			case five:
+				V[x] = 0x5;
+				break;
+			case six:
+				V[x] = 0x6;
+				break;
+			case seven:
+				V[x] = 0x7;
+				break;
+			case eight:
+				V[x] = 0x8;
+				break;
+			case nine:
+				V[x] = 0x9;
+				break;
+			case a:
+				V[x] = 0xa;
+				break;
+			case b:
+				V[x] = 0xb;
+				break;
+			case c:
+				V[x] = 0xc;
+				break;
+			case d:
+				V[x] = 0xd;
+				break;
+			case e:
+				V[x] = 0xe;
+				break;
+			case f:
+				V[x] = 0xf;
+				break;
+			default:
+				fprintf(stderr, "Err! Key doesn't exist!\n");
+				exit(1);
+				break;
+			}
 			break;
 		} else if ((opcode & 0x00FF) == 0x15) {  /* LD DT, Vx */
 			delay_timer = V[x];
@@ -356,7 +436,7 @@ void __c8_cycle (void)
 		} else if ((opcode & 0x00FF) == 0x33) {  /* LD B, Vx */
 			memory[I]   = V[x] / 100;
 			memory[I+1] = V[x] / 10 % 10;
-			memory[I+2] = V[x] % 20;
+			memory[I+2] = V[x] % 10;
 			break;
 		} else if ((opcode & 0x00FF) == 0x55) {  /* LD [I], Vx */
 			int i = 0;
@@ -431,6 +511,11 @@ void chip8_emulator (char *rom_fp)
 {
 	__init_chip8_emulator();
 	__load_chip8_emulator(rom_fp);
+
+	uint8_t *watchpoints[100];
+	uint8_t watchvalues[100];
+	size_t wp = 0;
+
 	if (!mode)
 		while (1) {
 			__c8_cycle();
@@ -440,7 +525,15 @@ void chip8_emulator (char *rom_fp)
 			__c8_dump_registers();			/* V0-VF 		*/
 			__c8_dump_special_registers();		/* I, SP, PC, DT, ST 	*/
 			__c8_dump_stack();			/* stack 	     	*/
-			__c8_dump_memory();
+
+			/* check for watchpoint changes */
+			for (size_t i = 0; i < wp; i++) {
+				if (*watchpoints[i] != watchvalues[i]) {
+					printf("C8DBG> Watchpoint %zu changed it's value from: 0x%02x to 0x%02x\n", i, watchvalues[i], *watchpoints[i]);
+					watchvalues[i] = *watchpoints[i];
+				}
+			}
+
 			__c8_cycle();
 			char command, nl;
 get_command:
@@ -468,6 +561,16 @@ get_command:
 						__c8_cycle();
 					}
 				} else fprintf(stderr, "C8DBG> Breakpoint address: %d is out of bounds!\n", break_addr);
+			} else if (command == 'w') {
+				int watch_addr;
+				scanf("%d%c", &watch_addr, &nl);
+				if (watch_addr >= 0 && watch_addr < 4096) {
+					watchpoints[wp] = &memory[watch_addr];
+					watchvalues[wp] = memory[watch_addr];
+					wp++;
+					printf("C8DBG> Watchpoint %zu set to address %d\n", wp, watch_addr);
+					goto get_command;
+				} else fprintf(stderr, "C8DBg> Watchpoint address: %d is out of bounds!\n", watch_addr);
 			} else if (command != 'n') {
 				fprintf(stderr, "C8DBG> Debugger command: %c unknown!\n", command);
 				exit(1);
