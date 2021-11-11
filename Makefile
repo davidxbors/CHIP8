@@ -1,7 +1,7 @@
 build: chip8_emulator
 
 chip8_emulator:
-	gcc ./src/c8.c -o chip8_emulator -std=c99
+	gcc ./src/c8.c -O3 -o chip8_emulator -std=c99
 
 clean:
 	rm chip8_emulator

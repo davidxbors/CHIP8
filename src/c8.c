@@ -3,90 +3,10 @@
  * Usage : ./chip8_emulator help
  */
 #include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
-#define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
-
-
-/* memory and registers */
-
-/* memory -> 4 kb of ram */
-uint8_t memory[4096];
-/* display 32 x 64 pixels monochrome */
-int display[32][64];
-/* program counter */
-uint16_t PC;
-/* 16-bit index register I */
-uint16_t I;
-/* stack for 16 16-bit addresses */
-uint16_t stack[16];
-/* 8 bit stack pointer */
-uint8_t SP;
-/* 8 bit delay timer */
-uint8_t delay_timer;
-/* 8 bit sound timer */
-uint8_t sound_timer;
-/* 16 8 bit general purpose registers V0 -> VF */
-uint8_t V[17];
-/* vf is also used as a flag register -> NOT TO BE USED BY ANY PROGRAM */
-uint8_t *VF = (V + 0xF);
-
-/* keyboard */
-uint8_t key[16];
-
-/* font */
-unsigned char chip8_fontset[80] =
-{
-    0xF0, 0x90, 0x90, 0x90, 0xF0, //0
-    0x20, 0x60, 0x20, 0x20, 0x70, //1
-    0xF0, 0x10, 0xF0, 0x80, 0xF0, //2
-    0xF0, 0x10, 0xF0, 0x10, 0xF0, //3
-    0x90, 0x90, 0xF0, 0x10, 0x10, //4
-    0xF0, 0x80, 0xF0, 0x10, 0xF0, //5
-    0xF0, 0x80, 0xF0, 0x90, 0xF0, //6
-    0xF0, 0x10, 0x20, 0x40, 0x40, //7
-    0xF0, 0x90, 0xF0, 0x90, 0xF0, //8
-    0xF0, 0x90, 0xF0, 0x10, 0xF0, //9
-    0xF0, 0x90, 0xF0, 0x90, 0x90, //A
-    0xE0, 0x90, 0xE0, 0x90, 0xE0, //B
-    0xF0, 0x80, 0x80, 0x80, 0xF0, //C
-    0xE0, 0x90, 0x90, 0x90, 0xE0, //D
-    0xF0, 0x80, 0xF0, 0x80, 0xF0, //E
-    0xF0, 0x80, 0xF0, 0x80, 0x80  //F
-};
-
-
-/* emulator variables */
-/* TODO - configurable */
-/* keypad mapping */
-enum key_map {
-	one = '1',
-	two = '2',
-	three = '3',
-	c = '4',
-	four = 'q',
-	five = 'w',
-	six = 'e',
-	d = 'r',
-	seven = 'a',
-	eight = 's',
-	nine = 'd',
-	e = 'f',
-	a = 'z',
-	zero = 'x',
-	b = 'c',
-	f = 'v'
-} keys;
-
-/* current opcode processed */
-uint16_t opcode;
-/* instruction set currently used (SUPER / COSMAC, by default SUPER) */
-enum instruction_set {SUPER_CHIP, COSMAC_VIP} is;
-/* running mode: NORMAL/DEBUG */
-enum run_mode {NORMAL, DEBUG} mode;
+#include "chip8.h"
+#include "keypad_configuration.h"
 
 /* init the emulator */
 void __init_chip8_emulator (void)
@@ -358,8 +278,8 @@ void __c8_cycle (void)
 			V[x] = delay_timer;
 			break;
 		} else if ((opcode & 0x00FF) == 0x0A) {  /* LD Vx, K */
-			int nl;
-			scanf("%c%c", &keys, &nl);
+			char nl;
+			scanf("%u%c", &keys, &nl);
 			switch (keys) {
 			case zero:
 				V[x] = 0x0;

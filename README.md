@@ -12,6 +12,8 @@ This emulator is far from perfect, and it's intended to be a very light-weight, 
 
 For any questions you might have feel free to [contact me](mailto:daviddvd267@gmail.com), or ask away on the [r/EmuDev](https://old.reddit.com/r/EmuDev/) forum.
 
+![BonCode Test Compliant](./img/BC_Test.png)
+
 ## Usage
 
 ```bash Normal Running 
@@ -43,10 +45,6 @@ The debugger that this emulator comes with is by all means a very basic one. Her
 * b addr -> addr in memory at which the program should stop running (if PC == addr break)
 * w addr -> sets a watchpoint for the memory at the given address. The debugger supports up to 100 watchpoints.
 
-## TODO
-* SOLVE WARNINGS
-* ORG CODE
-
 ## References
 
 [Tehnical informations about CHIP-8 and it's opcodes](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM)
@@ -57,8 +55,6 @@ The debugger that this emulator comes with is by all means a very basic one. Her
 
 [ibm_logo.ch8](https://github.com/ronazulay/Chip8/tree/master/Chip8/Roms)
 
-[All the other ROMs](https://johnearnest.github.io/chip8Archive)
+[All the other .ch8 ROMs](https://johnearnest.github.io/chip8Archive)
 
-
-
-
+.c8 ROMs are written by myself
